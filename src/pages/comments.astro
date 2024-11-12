@@ -38,6 +38,8 @@ comments = db.prepare("SELECT content FROM comments").all() as Comment[];
     </form>
     <h2>Comments:</h2>
     <ul>
+      { /* the safe way to do this:
+      {comments.map((comment) => <li>{comment.content}</li>)} */ }
       {comments.map((comment) => <li set:html={comment.content} />)}
     </ul>
   </body>
