@@ -1,0 +1,44 @@
+---
+import { type Comment, openDb } from "../lib/db.ts";
+
+
+let comments = [];
+const db = openDb();
+
+// Handle form submission
+if (Astro.request.method === "POST") {
+  const formData = await Astro.request.formData();
+  const comment = formData.get("comment");
+
+  // Vulnerable: Insert comment without sanitization or parameterization
+  db.exec(`INSERT INTO comments (content) VALUES ('${comment}')`);
+
+  // Redirect to prevent form resubmission
+  return Astro.redirect("/comments");
+}
+
+comments = db.prepare("SELECT content FROM comments").all() as Comment[];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Stored XSS Example with SQLite</title>
+  </head>
+  <body>
+    <h1>Stored XSS Example with SQLite</h1>
+    <form method="POST" action="/comments">
+      <textarea
+        name="comment"
+        rows="4"
+        cols="50"
+        placeholder="Enter your comment"></textarea><br />
+      <button type="submit">Submit</button>
+    </form>
+    <h2>Comments:</h2>
+    <ul>
+      {comments.map((comment) => <li set:html={comment.content} />)}
+    </ul>
+  </body>
+</html>
