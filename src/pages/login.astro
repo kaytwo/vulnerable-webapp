@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+// Handle form submission
+if (Astro.request.method === "POST") {
+  const formData = await Astro.request.formData();
+  const username = formData.get("username");
+  if (username) {
+    // send a set-cookie for username=username
+    Astro.cookies.set(`username`, username.toString());
+  }
+
+  // Redirect to prevent form resubmission
+  return Astro.redirect("/authored-comments");
+}
+---
+<Base>
+Login with a specified username:
+<form method="POST" action="/login">
+  <input type="text" name="username" placeholder="Username" />
+  <input type="submit" value="Login" />
+</form>
+</Base>

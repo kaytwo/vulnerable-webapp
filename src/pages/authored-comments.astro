@@ -1,0 +1,63 @@
+---
+import Base from "../layouts/Base.astro";
+import { type Comment, openDb } from "../lib/db.ts";
+
+const db = openDb();
+
+if (Astro.request.method === "POST") {
+  const formData = await Astro.request.formData();
+  const comment = formData.get("comment");
+  const author = Astro.cookies.get("username")?.value ?? "";
+
+  // to fix:
+  // in real life, this would be a random value that you generate, 
+  // store in the session,
+  // include in the rendered form below,
+  // and confirm on submission
+  const CSRFToken = formData.get("CSRFToken");
+  if (CSRFToken !== "abc123") {
+    return Astro.redirect("/");
+  }
+
+  // Vulnerable to stored XSS: Insert comment without sanitization or parameterization
+  db.exec(
+    `INSERT INTO comments (content, author) VALUES ('${comment}', '${author}')`
+  );
+
+  // Fixed: Insert comment with parameterization
+  // db.prepare("INSERT INTO comments (content, author) VALUES (?, ?)").run(comment, author);
+
+  // redirect to GET /comments to prevent form resubmission
+  return Astro.redirect("/comments");
+}
+
+const comments = db
+  .prepare("SELECT content, author FROM comments")
+  .all() as Comment[];
+
+const username = Astro.cookies.get("username")?.value ?? "";
+---
+
+<Base>
+  <h1>Stored XSS Example with SQLite</h1>
+  <p>
+    Welcome, {username}! Enter your comment below.
+  </p>
+  <form method="POST" action="/comments">
+    <textarea name="comment" rows="4" cols="50" placeholder="Enter your comment"
+    ></textarea><br />
+    <button type="submit">Submit</button>
+  </form>
+  <h2>Comments:</h2>
+  <ul>
+    {
+      /* the safe way to do this:
+      {comments.map((comment) => <li>{comment.author + " says: " + comment.content}</li>)} */
+    }
+    {
+      comments.map((comment) => (
+        <li set:html={comment.author + " says: " + comment.content} />
+      ))
+    }
+  </ul>
+</Base>

@@ -3,7 +3,8 @@ import { openDb } from "./db";
 openDb().exec(`
   CREATE TABLE IF NOT EXISTS comments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    content TEXT NOT NULL
+    content TEXT NOT NULL,
+    author TEXT NOT NULL DEFAULT 'Anonymous'
   );
 `);
 

@@ -1,0 +1,25 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base>
+<h1>DOM-based XSS Example</h1>
+Browsers block the execution of script tags in innerHTML by default, 
+but you can still execute JavaScript by injecting it into an event 
+handler that expects javascript. In this example, we inject the value 
+of the "data" parameter into the DOM using innerHTML, and it includes an 
+image which fails, and the javascript event handler for failure includes 
+our payload.
+<div id="content"></div>
+
+<script>
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const data = params.get("data");
+
+  if (data) {
+    // Vulnerable: Inject data directly into the DOM
+    // Solution: use innerText or DOMPurify to sanitize the data
+    document.getElementById("content")!.innerHTML = data;
+  }
+</script>
+</Base>
